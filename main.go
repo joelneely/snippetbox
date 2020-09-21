@@ -9,6 +9,13 @@ import (
 // "Hello from Snippetbox" as the response body.
 
 func home(w http.ResponseWriter, r *http.Request) {
+	// Check whether the current request URL path exactly matches "/". If not,
+	// use the http.NotFound() function to send a 404 response to the client.
+	// Return from the handler to fail fast (without including the message).
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
 	w.Write([]byte("Hello from Snippetbox"))
 }
 
