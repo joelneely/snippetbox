@@ -26,6 +26,18 @@ func showSnippet(w http.ResponseWriter, r *http.Request) {
 
 // Add a createSnippet handler function.
 func createSnippet(w http.ResponseWriter, r *http.Request) {
+	// Check whether the request used POST.
+	if r.Method != http.MethodPost {
+		// If not, add an 'Allow:POST' header to the response header map,
+		// reject the request with "Method Not Allowed", then fail fast.
+		w.Header().Set("Allow", http.MethodPost)
+		// Instead of using separate calls...
+		//   w.WriteHeader(405)
+		//   w.Write([]byte("Method Not Allowed"))
+		// ...the Error function does both at once.
+		http.Error(w, "Method Not Allowed", 405)
+		return
+	}
 	w.Write([]byte("Create a new snippet..."))
 }
 
