@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 // Define a home handler function which writes a byte slice containing
@@ -21,7 +23,20 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 // Add a showSnippet handler function.
 func showSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display a specific snippet..."))
+	// Extract the id parameter's value from the query string,
+	// converting it to an integer for security purposes via the
+	// strconv.Atoi() function. On invalid data (or negative values),
+	// return a 404 Not Found response.
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+	// Temporarily use fmt.Fprintf() to construct a response that
+	// contains the snippet number (from the id parameter).
+	// This replaces the original placeholder below:
+	// w.Write([]byte("Display a specific snippet..."))
+	fmt.Fprintf(w, "Display a specific snippet with id %d", id)
 }
 
 // Add a createSnippet handler function.
@@ -35,6 +50,11 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 		//   w.WriteHeader(405)
 		//   w.Write([]byte("Method Not Allowed"))
 		// ...the Error function does both at once.
+		//
+		// See also the book's description of setting application/json,
+		// for direct access to the header map for exceptional names,
+		// and for suppression of system-generated headers.
+		//
 		http.Error(w, "Method Not Allowed", 405)
 		return
 	}
