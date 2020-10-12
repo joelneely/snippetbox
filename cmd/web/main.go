@@ -7,6 +7,11 @@ import (
 	"os"
 )
 
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
+
 func main() {
 	port := flag.String("port", ":4000", "HTTP server port")
 	flag.Parse()
@@ -14,23 +19,26 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	app := &application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
+	}
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet", app.showSnippet)
+	mux.HandleFunc("/snippet/create", app.createSnippet)
 
-	// Create a file server which serves files out of ./ui/static
-	// Note that the path given to http.Dir is relative to the
-	// project directory root.
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
-
-	// Use the mux.Handle() function to register the file server
-	// as the handler for all URL paths starting with "/static/".
-	// The "/static" prefix must be stripped before handoff to
-	// the file server.
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
+	srv := &http.Server{
+		Addr:     *port,
+		ErrorLog: errorLog,
+		Handler:  mux,
+	}
+
 	infoLog.Printf("Starting server on %s\n", *port)
-	err := http.ListenAndServe(*port, mux)
+	err := srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
